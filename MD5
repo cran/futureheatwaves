@@ -1,6 +1,7 @@
-61d34537b56e44d5798b1298e96dd95b *DESCRIPTION
+c405b3239ce39a5ad511c089b30efada *DESCRIPTION
 d18d98395de7bc177c0fb4cbfe739a8c *NAMESPACE
-4f2e2c57b5f0fd19cb9661d1455253df *R/IDHeatwaves.R
+c13b9860fbc4448a16240a424e08c4ba *NEWS.md
+455fca11954e970f10da56c143c620a2 *R/IDHeatwaves.R
 334051c2cfeab2b4768dc0a916ecd63e *R/IO.R
 74e85dcd17b1a08362b15d7f6493e7ba *R/RcppExports.R
 5dad0f87b83a20a12118eac2ba63365d *R/applyHeatwaves.R
@@ -13,7 +14,7 @@ d4e2f80dc57c743d47d8ead40d55e4ca *R/main.R
 aa67b583b3a601dbef09126524e75703 *R/process.R
 10de5fab2f3f5fad1d4e8b7234ad2c4b *R/processHeatwaves.R
 026f53dc12db418a9b98b387ef7b7578 *README.md
-38941ea62cdddc45dd7a8b50a5354c1a *build/vignette.rds
+9e1c4b471fe01517d4fee3c8f7e93cd8 *build/vignette.rds
 8a9403c90f1001348f887de3c5d24601 *data/datafr.rda
 9cf9995896f20f81b7bdf966f961d433 *data/hw_datafr.rda
 11661f106d4c695da42aaacb50be2809 *inst/doc/futureheatwaves.R
@@ -41,7 +42,7 @@ fa65ada295ccf95ac4be24a19a884334 *inst/extdata/example_results/Heatwaves/Project
 d9dfdd5aef8d710e395ef2bcdefe5e0c *inst/extdata/example_results/hwModelInfo.csv
 f7b9a5f8e23814b5856e92b1aaf53561 *inst/extdata/example_results/locationList.csv
 0751bfef8cf438e65dd36a4528b723f5 *inst/include/futureheatwaves.h
-6bb672148fbcb672b97cc2585715ed7d *inst/include/futureheatwaves_RcppExports.h
+488ee0cba4201597d2d507115ee19d74 *inst/include/futureheatwaves_RcppExports.h
 778b1ca3d062b0b41292643d1c1601d9 *man/IDHeatwavesAlternative.Rd
 8f00707926a6a21ca02c51e609eb1fa9 *man/IDHeatwavesCPP.Rd
 1ff5c2103ead92ccb376a176f779b0a0 *man/IDHeatwavesCPPwrapper.Rd
@@ -85,10 +86,10 @@ ba353b0a761bce0abf48a3697b4f3346 *man/readtas.Rd
 e0782def36138206f91c57d060bcb364 *man/storeHeatwaveEntry.Rd
 5c192838f879b2b41b0aa43c60a239b5 *man/storeZeroes.Rd
 9697e8e66cfe3fab088cf8a97fd5cc39 *man/writeAccumulators.Rd
-2d045e4515def3076d580b5789aa8fae *src/IdentifyHeatwaves.cpp
-b67151a2a7a00f2e99f0a2eb686282c8 *src/RcppExports.cpp
+623bbf3edcd791396559b675f422d439 *src/IdentifyHeatwaves.cpp
+bb4fff0736a99ff99ab3964a158b60e5 *src/RcppExports.cpp
 45c2bb58c4df0449731b2aaf2785ba91 *tests/testthat.R
-add7a15f45a90bbd3c1cab76c03c5379 *tests/testthat/test_IDHeatwaves.R
+75d27095a9dd3b00262f4ce7ab151fc1 *tests/testthat/test_IDHeatwaves.R
 192f36e0c9f28f0bb1559e9de2b90ae5 *tests/testthat/test_IO.R
 767c75dc40bf5e9ecee7bd0c97b64669 *tests/testthat/test_preparation.R
 12b07bce3de49607452c6d8fbd7eaa4e *vignettes/futureheatwaves.Rmd

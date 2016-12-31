@@ -1,13 +1,15 @@
-#' Create and write heat wave projections
+#' Create and write extreme event projections
 #'
-#' This function creates datasets of identified and characterized heat waves
+#' This function creates datasets of identified and characterized extreme events
 #' for all ensemble members in all climate models in a directory of climate
-#' projections for a user-specified set of locations.The resulting heat wave
+#' projections for a user-specified set of locations.The resulting extreme event
 #' projections are written out to a specified directory on the user's local
-#' computer.
+#' computer. For more details on downloading CMIP5 climate model output
+#' data and setting it up to use with this function, see this package's
+#' "starting_from_netcdf" vignette.
 #'
 #' @param out Character string with pathway to directory to which
-#'    heat wave files will be written. This should be a pathname to a directory
+#'    extreme event files will be written. This should be a pathname to a directory
 #'    on the user's local computer. If the directory already exists, it will
 #'    be overwritten by this function, so the user should either specify a
 #'    pathname for a directory that does not yet exist or be willing to
@@ -38,26 +40,26 @@
 #'    the package vignette for an example of the required structure for this
 #'    file.
 #' @param IDheatwavesFunction A character string with the name of the R function
-#'    to use to identify heat waves. This function may be a user-specified custom
+#'    to use to identify extreme events. This function may be a user-specified custom
 #'    function, but it must be loaded into the current R session. The
 #'    function name must be put in quotation marks. For more guidance on how to
-#'    write and use a custom function to identify heat waves, see the package
+#'    write and use a custom function to identify extreme events, see the package
 #'    vignette for \code{futureheatwaves}.
 #' @param thresholdBoundaries A numeric vector with the custom time boundaries
-#'    to be used to determine the threshold temperatures for the heat wave
+#'    to be used to determine the threshold variable values for the extreme event
 #'    definition. The required format for this vector is c(start year, end
 #'    year), with the restriction that bounds must be contained within the
 #'    time boundaries of one of the two experiment subdirectories specified
 #'    by the \code{dataDirectories} argument in \code{\link{gen_hw_set}}.
 #'    The default value is 1990 to 1999.
 #' @param projectionBoundaries A numeric vector with the custom time boundaries
-#'    for which the user wants to create heat wave projections. The required
+#'    for which the user wants to create extreme event projections. The required
 #'    format for this vector is c(start year, end year), with the restriction
 #'    that bounds must be contained within the time boundaries of one of the two
 #'    experiment subdirectories specified by the \code{dataDirectories} argument
 #'    in \code{\link{gen_hw_set}}. The default value is 2070 to 2079.
 #' @param referenceBoundaries A numeric vector with the custom time boundaries
-#'    to use in calculating relative characteristics for heat waves (i.e., to use
+#'    to use in calculating relative characteristics for extreme events (i.e., to use
 #'    when exploring the role of adaptation in projections). For more
 #'    information on how reference temperatures are used, see the package
 #'    vignette for \code{futureheatwaves}. The required format for this vector
@@ -66,14 +68,14 @@
 #'    subdirectories specified by the \code{dataDirectories} argument in
 #'    \code{\link{gen_hw_set}}. The default value is 2070 to 2079. If the
 #'    time bounds used differ from those used for projections, these reference
-#'    temperatures will be pulled from the ensemble member for each climate
+#'    variables will be pulled from the ensemble member for each climate
 #'    model specified by \code{threshold_ensemble}.
 #' @param probThreshold Numerical value between 0 and 1 specifying the
-#'    percentile to be used for the threshold temperature used to define heat
-#'    waves. The default value is 0.98 (i.e., a heat wave is a certain number of
+#'    percentile to be used for the threshold variable used to define extreme
+#'    events. The default value is 0.98 (i.e., a heat wave is a certain number of
 #'    days above the city's 98th percentile temperature).
 #' @param numDays Integer greater than 0 giving the number of days to
-#'    use in the heat wave definition (e.g., \code{numDays = 2} would define a
+#'    use in the extreme event definition (e.g., \code{numDays = 2} would define a
 #'    heat wave as two or more days above the threshold temperature).
 #' @param printWarning TRUE / FALSE, specifies whether to print out a warning
 #'    informing the user that the function will write out results to the local
@@ -100,17 +102,31 @@
 #' @param threshold_ensemble A character vector giving the name of the ensemble
 #'    member that should be used when determining the city-specific threshold
 #'    temperatures  for each climate model (e.g., \code{"r1i1p1"}). This
-#'    threshold is used for relative heat wave definitions. See the
-#'    \code{futureheatwaves} vignette for more on heat wave definitions.
+#'    threshold is used for relative extreme event definitions. See the
+#'    \code{futureheatwaves} vignette for more on extreme event definitions.
 #'    If any climate model lacks that ensemble member for the specified
 #'    dates for calculating the threshold, it will be excluded from the
 #'    processing.
-#' @param input_metric A character string indicating the temperature metric
-#'    of the climate projection data being processed. Choices are "kelvin",
-#'    "fahrenheit", and "celsius".
+#' @param seasonal_months A numeric vector giving the months to use to
+#'    calculate the "mean.seasonal.var" column in the extreme event characteristics
+#'    output file. For example, if \code{seasonal_months} is set to \code{6:8},
+#'    daily temperatures from June through August each day during the reference
+#'    years would be used to calculate this mean seasonal value. The default
+#'    is \code{5:9} (May--September).
+#' @param absolute_thresholds A numeric vector with four values giving the
+#'    absolute thresholds to use when calculating the "days.above.abs.thershold"
+#'    columns in the heatwave characteristic output files. These values must be
+#'    given in the units in which temperature is expressed in the input data
+#'    (typically Kelvin for climate model output data). The default values are the
+#'    values in Kelvin corresponding to 80, 85, 90, and 95 degrees Fahrenheit. If
+#'    this parameter is customized, it must include four values.
+#' @param above_threshold A logical value specifying whether events should be
+#'    identified by finding days above a threshold (\code{TRUE}, the default, e.g.,
+#'    for finding heat waves or extreme air pollution events) or below a
+#'    threshold (\code{FALSE}, e.g., for finding cold waves or droughts).
 #'
 #' @return This function creates, and writes to the user's computer, files with
-#'    the heat waves and their characteristics for the specified climate
+#'    the extreme events and their characteristics for the specified climate
 #'    projections and dates. For more information on customizing this function,
 #'    see the \code{futureheatwaves} vignette. This function also returns a
 #'    dataframe listing the name of each climate model processed, as well as the
@@ -156,7 +172,25 @@ gen_hw_set <- function(out,
                        printWarning = TRUE,
                        threshold_ensemble = "r1i1p1",
                        lat_lon_colnames = c("lat", "lon"),
-                       input_metric = "kelvin"){
+                       above_threshold = TRUE,
+                       absolute_thresholds = c(299.82, 302.60, 305.37, 308.15),
+                       seasonal_months = c(5:9)){
+
+        # Add warning for user that this will write new files
+        if(printWarning){
+                cat("\n", "Warning: This function will write new files",
+                    "to your computer in the \n", out,
+                    "directory of your computer. If that directory already",
+                    "exists,\nrunning this function will write over it. \n",
+                    "Do you want to continue? (y / n): \n")
+                user_prompt <- scan(n = 1, what = "character", quiet = TRUE)
+                user_prompt <- tolower(user_prompt)
+                if(!(user_prompt %in% c("y", "yes"))){
+                        message(paste("User chose to exit at prompt. This function",
+                                      "cannot be run without writing files locally."))
+                        return()
+                }
+        }
 
         # If `dataFolder` does not end in "/", add it.
         split_dataFolder <- unlist(strsplit(dataFolder, split = ""))
@@ -172,8 +206,6 @@ gen_hw_set <- function(out,
                 out <- paste0(out, "/")
         }
 
-        input_metric <- tolower(input_metric)
-
         # Check the parameters for errors
         check_params(out = out,
                      dataFolder = dataFolder,
@@ -186,22 +218,9 @@ gen_hw_set <- function(out,
                      thresholdBoundaries = thresholdBoundaries,
                      projectionBoundaries = projectionBoundaries,
                      referenceBoundaries = referenceBoundaries,
-                     input_metric = input_metric,
-                     numDays = numDays)
-
-  # Add warning for user that this will write new files
-        if(printWarning){
-                cat("\n", "Warning: This function will write new files",
-                    "to your computer in the \n", out,
-                    "directory of your computer. If that directory already",
-                    "exists,\nrunning this function will write over it. \n",
-                    "Do you want to continue? (y / n): \n")
-                user_prompt <- scan(n = 1, what = "character")
-                user_prompt <- tolower(user_prompt)
-                if(!(user_prompt %in% c("y", "yes"))){
-                        stop("User chose to exit at prompt.")
-                }
-        }
+                     numDays = numDays,
+                     seasonal_months = seasonal_months,
+                     absolute_thresholds = absolute_thresholds)
 
         # Put the directories into nested list form
         models <- acquireDirectoryStructure(dataFolder = dataFolder,
@@ -227,10 +246,14 @@ gen_hw_set <- function(out,
                        "tasFilenames" = tasFilenames,
                        "timeFilenames" = timeFilenames,
                        "threshold_ensemble" = threshold_ensemble,
-                       "input_metric" = input_metric)
+                       "above_threshold" = above_threshold)
 
         # Create the "custom" list object that will hold all of the user's
         # custom settings.
+        if(above_threshold == FALSE){  # Flip threshold if calculating below a threshold
+                probThreshold <- 1 - probThreshold
+                absolute_thresholds <- -1 * absolute_thresholds
+        }
         custom <- list("IDheatwaves" = IDheatwavesFunction,
                        "getBounds" = c(thresholdBoundaries,
                                        projectionBoundaries),
@@ -238,7 +261,9 @@ gen_hw_set <- function(out,
                        "createHwDataframe" = !identical(projectionBoundaries,
                                                        referenceBoundaries),
                        "probThreshold" = probThreshold,
-                       "numDays" = as.integer(floor(numDays)))
+                       "numDays" = as.integer(floor(numDays)),
+                       "seasonal_months" = seasonal_months,
+                       "absolute_thresholds" = absolute_thresholds)
 
         # Create accumulator closure
         accumulators <- createAccumulators()
@@ -288,8 +313,9 @@ check_params <- function(out,
                          thresholdBoundaries,
                          projectionBoundaries,
                          referenceBoundaries,
-                         input_metric,
-                         numDays){
+                         numDays,
+                         seasonal_months,
+                         absolute_thresholds){
 
         # Check to see if the folder that holds the climate data exists.
         tryCatch(
@@ -322,14 +348,21 @@ check_params <- function(out,
                 stop("The `timeFilenames` is not a .csv file.")
         }
 
-        if(!(input_metric %in% c("kelvin", "fahrenheit", "celsius"))){
-                stop("`input_metric` must be `kelvin`, `fahrenheit`, or `celsius`.")
-        }
-
         if(numDays <= 0){
                 stop("`numDays` must be 1 or larger.")
         } else if(!is.numeric(numDays)){
                 stop("`numDays` must be a numeric value.")
+        }
+
+        if(any(!(seasonal_months %in% 1:12))){
+                stop("`seasonal_months` must be integers between 1 and 12")
+        }
+
+        if(any(!is.numeric(absolute_thresholds))){
+                stop("All absolute thresholds must be numeric.")
+        }
+        if(length(absolute_thresholds) != 4){
+                stop("If customizing absolute thresholds, you must include four values.")
         }
 
         checkCustomBounds(boundList = thresholdBoundaries,

@@ -6,11 +6,12 @@
 \usage{
 check_params(out, dataFolder, dataDirectories, citycsv, coordinateFilenames,
   tasFilenames, timeFilenames, IDheatwavesFunction, thresholdBoundaries,
-  projectionBoundaries, referenceBoundaries, input_metric, numDays)
+  projectionBoundaries, referenceBoundaries, numDays, seasonal_months,
+  absolute_thresholds)
 }
 \arguments{
 \item{out}{Character string with pathway to directory to which
-heat wave files will be written. This should be a pathname to a directory
+extreme event files will be written. This should be a pathname to a directory
 on the user's local computer. If the directory already exists, it will
 be overwritten by this function, so the user should either specify a
 pathname for a directory that does not yet exist or be willing to
@@ -57,14 +58,14 @@ the package vignette for an example of the required structure for this
 file.}
 
 \item{IDheatwavesFunction}{A character string with the name of the R function
-to use to identify heat waves. This function may be a user-specified custom
+to use to identify extreme events. This function may be a user-specified custom
 function, but it must be loaded into the current R session. The
 function name must be put in quotation marks. For more guidance on how to
-write and use a custom function to identify heat waves, see the package
+write and use a custom function to identify extreme events, see the package
 vignette for \code{futureheatwaves}.}
 
 \item{thresholdBoundaries}{A numeric vector with the custom time boundaries
-to be used to determine the threshold temperatures for the heat wave
+to be used to determine the threshold variable values for the extreme event
 definition. The required format for this vector is c(start year, end
 year), with the restriction that bounds must be contained within the
 time boundaries of one of the two experiment subdirectories specified
@@ -72,14 +73,14 @@ by the \code{dataDirectories} argument in \code{\link{gen_hw_set}}.
 The default value is 1990 to 1999.}
 
 \item{projectionBoundaries}{A numeric vector with the custom time boundaries
-for which the user wants to create heat wave projections. The required
+for which the user wants to create extreme event projections. The required
 format for this vector is c(start year, end year), with the restriction
 that bounds must be contained within the time boundaries of one of the two
 experiment subdirectories specified by the \code{dataDirectories} argument
 in \code{\link{gen_hw_set}}. The default value is 2070 to 2079.}
 
 \item{referenceBoundaries}{A numeric vector with the custom time boundaries
-to use in calculating relative characteristics for heat waves (i.e., to use
+to use in calculating relative characteristics for extreme events (i.e., to use
 when exploring the role of adaptation in projections). For more
 information on how reference temperatures are used, see the package
 vignette for \code{futureheatwaves}. The required format for this vector
@@ -88,16 +89,27 @@ contained within the time boundaries of one of the two experiment
 subdirectories specified by the \code{dataDirectories} argument in
 \code{\link{gen_hw_set}}. The default value is 2070 to 2079. If the
 time bounds used differ from those used for projections, these reference
-temperatures will be pulled from the ensemble member for each climate
+variables will be pulled from the ensemble member for each climate
 model specified by \code{threshold_ensemble}.}
 
-\item{input_metric}{A character string indicating the temperature metric
-of the climate projection data being processed. Choices are "kelvin",
-"fahrenheit", and "celsius".}
-
 \item{numDays}{Integer greater than 0 giving the number of days to
-use in the heat wave definition (e.g., \code{numDays = 2} would define a
+use in the extreme event definition (e.g., \code{numDays = 2} would define a
 heat wave as two or more days above the threshold temperature).}
+
+\item{seasonal_months}{A numeric vector giving the months to use to
+calculate the "mean.seasonal.var" column in the extreme event characteristics
+output file. For example, if \code{seasonal_months} is set to \code{6:8},
+daily temperatures from June through August each day during the reference
+years would be used to calculate this mean seasonal value. The default
+is \code{5:9} (May--September).}
+
+\item{absolute_thresholds}{A numeric vector with four values giving the
+absolute thresholds to use when calculating the "days.above.abs.thershold"
+columns in the heatwave characteristic output files. These values must be
+given in the units in which temperature is expressed in the input data
+(typically Kelvin for climate model output data). The default values are the
+values in Kelvin corresponding to 80, 85, 90, and 95 degrees Fahrenheit. If
+this parameter is customized, it must include four values.}
 }
 \value{
 Only stops and returns an error if any parameters are incorrect.

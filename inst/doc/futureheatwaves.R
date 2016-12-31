@@ -2,8 +2,19 @@
 library(futureheatwaves)
 library(ggplot2)
 
+## ----echo = FALSE, fig.align = "center"----------------------------------
+knitr::include_graphics("figures/OverviewFigure.png")
+
 ## ------------------------------------------------------------------------
 system.file("extdata/cities.csv", package = "futureheatwaves")
+
+## ----eval = FALSE--------------------------------------------------------
+#  city_filepath <- system.file("extdata/cities.csv", package = "futureheatwaves")
+#  file.edit(city_filepath)
+
+## ------------------------------------------------------------------------
+list.files(system.file("extdata/cmip5", package = "futureheatwaves"),
+           recursive = TRUE)
 
 ## ----eval = FALSE--------------------------------------------------------
 #  # Identify location of example files
@@ -22,17 +33,19 @@ system.file("extdata/cities.csv", package = "futureheatwaves")
 #             tasFilenames = "tas_NorthAmerica_12mo.csv",
 #             timeFilenames = "time_NorthAmerica_12mo.csv")
 
-## ------------------------------------------------------------------------
-data(hw_datafr)
-hw_datafr[1:3, c("hw.number", "mean.temp", "length", "start.date",
-                 "mean.temp.quantile", "city")]
+## ----echo = FALSE, fig.align = "center"----------------------------------
+knitr::include_graphics("figures/OutputDirectoryFigure.png")
 
 ## ------------------------------------------------------------------------
-system.file("extdata/cmip5", package = "futureheatwaves")
+data(hw_datafr) 
+head(hw_datafr)
+
+## ----echo = FALSE, fig.align = "center"----------------------------------
+knitr::include_graphics("figures/FileDirectoryFigure.png")
 
 ## ------------------------------------------------------------------------
 average_mean_temp <- function(hw_datafr){
-        out <- mean(hw_datafr$mean.temp)
+        out <- mean(hw_datafr$mean.var)
         return(out)
         }
 
@@ -83,6 +96,19 @@ average_mean_temp
 #             timeFilenames = "time_NorthAmerica_12mo.csv",
 #             thresholdBoundaries = c(2070, 2079))
 
+## ----eval = FALSE--------------------------------------------------------
+#  gen_hw_set(out = "example_results",
+#             dataFolder = projection_dir_location ,
+#             dataDirectories = list("historical" = c(1990, 1999),
+#                                    "rcp85" = c(2060, 2079)),
+#             citycsv = city_file_location,
+#             coordinateFilenames = "latitude_longitude_NorthAmerica_12mo.csv",
+#             tasFilenames = "tas_NorthAmerica_12mo.csv",
+#             timeFilenames = "time_NorthAmerica_12mo.csv",
+#             above_threshold = FALSE,
+#             probThreshold = 0.10,
+#             numDays = 3)
+
 ## ------------------------------------------------------------------------
 data(datafr)
 
@@ -124,6 +150,31 @@ head(id_of_hws, 3)
 #             timeFilenames = "time_NorthAmerica_12mo.csv",
 #             referenceBoundaries = c(1990, 1999))
 
+## ----eval = FALSE--------------------------------------------------------
+#  gen_hw_set(out = "example_results",
+#             dataFolder = projection_dir_location ,
+#             dataDirectories = list("historical" = c(1990, 1999),
+#                                          "rcp85" = c(2060, 2079)),
+#             citycsv = city_file_location,
+#             coordinateFilenames = "latitude_longitude_NorthAmerica_12mo.csv",
+#             tasFilenames = "tas_NorthAmerica_12mo.csv",
+#             timeFilenames = "time_NorthAmerica_12mo.csv",
+#             seasonal_months = c(6, 7, 8))
+
+## ----eval = FALSE--------------------------------------------------------
+#  library(weathermetrics)
+#  gen_hw_set(out = "example_results",
+#             dataFolder = projection_dir_location ,
+#             dataDirectories = list("historical" = c(1990, 1999),
+#                                          "rcp85" = c(2060, 2079)),
+#             citycsv = city_file_location,
+#             coordinateFilenames = "latitude_longitude_NorthAmerica_12mo.csv",
+#             tasFilenames = "tas_NorthAmerica_12mo.csv",
+#             timeFilenames = "time_NorthAmerica_12mo.csv",
+#             absolute_thresholds = convert_temperature(c(26, 28, 30, 32),
+#                                                       old_metric = "c",
+#                                                       new_metric = "k"))
+
 ## ----fig.width = 5, message = FALSE, warning = FALSE---------------------
 out <- system.file("extdata/example_results", package = "futureheatwaves")
 map_grid(plot_model = "bcc1", out = out)
@@ -137,4 +188,15 @@ map_grid(plot_model = "bcc1", out = out)
 #  a <- map_grid(plot_model = "bcc1", out = out)
 #  b <- map_grid(plot_model = "ccsm", out = out)
 #  grid.arrange(a, b, ncol = 1)
+
+## ----fig.width = 7-------------------------------------------------------
+map_grid_leaflet(plot_model = "bcc1", out = out)
+
+## ----eval = FALSE, message = FALSE, warning = FALSE, fig.width = 5, echo = 2----
+#  png("figures/grid_map_example.png", height = 400, width = 600)
+#  map_grid_ggmap(plot_model = "bcc1", out = out)
+#  dev.off()
+
+## ----echo = FALSE--------------------------------------------------------
+knitr::include_graphics("figures/grid_map_example.png")
 

@@ -80,6 +80,7 @@
 #' \code{\link{hw_datafr}} dataset and can be accessed using
 #' \code{data(hw_datafr)}.
 formHwFrame <- function(ensembleSeries, thresholds, global, custom){
+
         # Acquire list of heat wave dataframes for each city
         hwDataframeList <- apply(data.frame(thresholds), 1,
                                  createCityProcessor(global = global),
@@ -117,8 +118,13 @@ createCityProcessor <- function(global){
 
         function(threshold, ensembleSeries, custom){
                 city <- as.character(global$cities[i,1])
-                cat("Creating heat wave dataframe ~~ City: ", city,
-                    " ~~ City Number: ", i, " ~~ Cutoff: ", threshold, "\n")
+                if(global$above_threshold == FALSE){
+                        print_threshold <- -1 * threshold
+                } else {
+                        print_threshold <- threshold
+                }
+                cat("Creating dataframe ~~ City: ", city,
+                    " ~~ City Number: ", i, " ~~ Cutoff: ", print_threshold, "\n")
 
                 datafr <- data.frame(ensembleSeries$dates,
                                      ensembleSeries$series[,i])
@@ -158,8 +164,10 @@ createCityProcessor <- function(global){
 #'    argument.
 consolidate <- function(hwDataframeList){
         all <- hwDataframeList[[1]]
-        for(i in 2:length(hwDataframeList)){
-                all <- rbind(all, hwDataframeList[[i]])
+        if(length(hwDataframeList) >= 2){
+                for(i in 2:length(hwDataframeList)){
+                        all <- rbind(all, hwDataframeList[[i]])
+                }
         }
         return(all)
 }
@@ -279,57 +287,101 @@ createHwDataframe <- function(city, threshold, heatwaves,
         }
 
         hw.frame <- dplyr::group_by_(heatwaves2, ~ hw.number) %>%
-                dplyr::summarize_(mean.temp = ~ mean(tmpd),
-                                 max.temp = ~ max(tmpd),
-                                 min.temp = ~ min(tmpd),
+                dplyr::summarize_(mean.var = ~ mean(tmpd),
+                                 max.var = ~ max(tmpd),
+                                 min.var = ~ min(tmpd),
                                  length = ~ length(unique(date)),
-                                 start.date = ~ date[1],
                                  end.date = ~ date[length(date)],
-                                 start.doy = ~ as.POSIXlt(date[1])$yday,
-                                 start.month = ~ as.POSIXlt(date[1])$mon + 1,
-                                 days.above.80 = ~ length(date[tmpd > 80]),
-                                 days.above.85 = ~ length(date[tmpd > 85]),
-                                 days.above.90 = ~ length(date[tmpd > 90]),
-                                 days.above.95 = ~ length(date[tmpd > 95]),
+                                 start.date.year = ~ ifelse(is.na(date[1]), # Feb. 30 problem in some climate data
+                                                            as.POSIXlt(date[length(date)])$year +
+                                                                    1900,
+                                                          NA),
+                                 start.date.2 = ~ as.Date(paste(start.date.year,
+                                                           "03", "01", sep = "-"),
+                                                          format = "%Y-%m-%d"),
+                                 start.date = ~ as.Date(ifelse(is.na(date[1]),
+                                                       start.date.2,
+                                                       date[1]),
+                                                       origin = c("1970-01-01")),
+                                 start.doy = ~ as.POSIXlt(as.Date(start.date,
+                                                          origin = "1970-01-01"))$yday,
+                                 start.month = ~ as.POSIXlt(as.Date(start.date,
+                                                            origin = "1970-01-01"))$mon + 1,
+                                 days.above.abs.thresh.1 = ~ length(date[tmpd > custom$absolute_thresholds[1]]),
+                                 days.above.abs.thresh.2 = ~ length(date[tmpd > custom$absolute_thresholds[2]]),
+                                 days.above.abs.thresh.3 = ~ length(date[tmpd > custom$absolute_thresholds[3]]),
+                                 days.above.abs.thresh.4 = ~ length(date[tmpd > custom$absolute_thresholds[4]]),
                                  days.above.99th = ~ length(date[tmpd >
                                                 stats::quantile(ref_temps, .99,
                                                          na.rm = TRUE)]),
                                  days.above.99.5th = ~ length(date[tmpd >
                                                 stats::quantile(ref_temps, .995,
-                                                         na.rm = TRUE)]))
+                                                         na.rm = TRUE)])) %>%
+                dplyr::select_(c("-start.date.year")) %>%
+                dplyr::select_(c("-start.date.2"))
 
         if(nrow(hw.frame) == 0){
-                hw.frame$first.in.season <- numeric()
+                hw.frame$first.in.year <- numeric()
                 hw.frame$threshold <- numeric()
-                hw.frame$mean.temp.quantile <- numeric()
-                hw.frame$max.temp.quantile <- numeric()
-                hw.frame$min.temp.quantile <- numeric()
-                hw.frame$mean.temp.1 <- numeric()
-                hw.frame$mean.summer.temp <- numeric()
+                hw.frame$mean.var.quantile <- numeric()
+                hw.frame$max.var.quantile <- numeric()
+                hw.frame$min.var.quantile <- numeric()
+                hw.frame$mean.yearround.var <- numeric()
+                hw.frame$mean.seasonal.var <- numeric()
                 hw.frame$city <- character()
         } else {
-                hw.frame$first.in.season <- c(1, rep(NA, nrow(hw.frame) - 1))
-                for(i in 2:nrow(hw.frame)){
-                        if(as.POSIXlt(hw.frame$start.date)$year[i] !=
-                           as.POSIXlt(hw.frame$start.date)$year[i - 1]){
-                                hw.frame$first.in.season[i] <- 1
-                        } else {
-                                hw.frame$first.in.season[i] <- 0
+                hw.frame$first.in.year <- c(1, rep(NA, nrow(hw.frame) - 1))
+                if(nrow(hw.frame) >= 2){
+                        for(i in 2:nrow(hw.frame)){
+                                if(as.POSIXlt(hw.frame$start.date)$year[i] !=
+                                   as.POSIXlt(hw.frame$start.date)$year[i - 1]){
+                                        hw.frame$first.in.year[i] <- 1
+                                } else {
+                                        hw.frame$first.in.year[i] <- 0
+                                }
                         }
                 }
+
                 hw.frame$threshold <- threshold
 
                 dist.tmpd <- stats::ecdf(ref_temps)
-                hw.frame$mean.temp.quantile <- dist.tmpd(hw.frame$mean.temp)
-                hw.frame$max.temp.quantile <- dist.tmpd(hw.frame$max.temp)
-                hw.frame$min.temp.quantile <- dist.tmpd(hw.frame$min.temp)
+                hw.frame$mean.var.quantile <- dist.tmpd(hw.frame$mean.var)
+                hw.frame$max.var.quantile <- dist.tmpd(hw.frame$max.var)
+                hw.frame$min.var.quantile <- dist.tmpd(hw.frame$min.var)
 
-                hw.frame$mean.temp.1 <- mean(ref_temps)
-                # Summertime is months May through September
-                summertime <- as.POSIXlt(ref_dates)$mon %in% c(4:8)
-                hw.frame$mean.summer.temp <- mean(ref_temps[summertime])
+                hw.frame$mean.yearround.var <- mean(ref_temps)
+                # Determine season time based on custom input
+                seasontime <- as.POSIXlt(ref_dates)$mon %in%
+                        (custom$seasonal_months - 1) # as.POSIX uses months 1 lower than
+                                                     # typical human conventions (i.e., Jan = 0, not 1)
+                hw.frame$mean.seasonal.var <- mean(ref_temps[seasontime])
 
                 hw.frame$city <- city
+
+                if(global$above_threshold == FALSE){
+                        hw.frame <- hw.frame %>%
+                                dplyr::mutate_(mean.var = ~ -1 * mean.var,
+                                               max.var = ~ -1 * min.var, # min and max need to be switched for below threshold
+                                               min.var = ~ -1 * max.var,
+                                               threshold = ~ -1 * threshold,
+                                               mean.var.quantile = ~ 1 - mean.var.quantile,
+                                               max.var.quantile = ~ 1 - min.var.quantile,
+                                               min.var.quantile = ~ 1 - max.var.quantile,
+                                               mean.yearround.var = ~ -1 * mean.yearround.var,
+                                               mean.seasonal.var = ~ -1 * mean.seasonal.var) %>%
+                                dplyr::rename_(.dots = stats::setNames(list("days.above.abs.thresh.1",
+                                                                            "days.above.abs.thresh.2",
+                                                                            "days.above.abs.thresh.3",
+                                                                            "days.above.abs.thresh.4",
+                                                                            "days.above.99th",
+                                                                            "days.above.99.5th"),
+                                                                      list("days.below.abs.thresh.1",
+                                                                           "days.below.abs.thresh.2",
+                                                                           "days.below.abs.thresh.3",
+                                                                           "days.below.abs.thresh.4",
+                                                                           "days.below.1st",
+                                                                           "days.below.0.5th")))
+                }
         }
 
         return(hw.frame)

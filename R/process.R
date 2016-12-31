@@ -89,7 +89,7 @@ processModel <- function(model, global, custom, accumulators,
                                reference = reference,
                                reference_dates = reference_dates)
 
-        return(projectionEnsembles)
+        return(NULL)
 }
 
 #' Calculate threshold temperatures
@@ -236,7 +236,7 @@ processProjections <- function(ensemble, modelName, ensembleWriter,
         ensembleWriter(hwFrame)
 
         # Return the ensemble used as the reference
-        return(ensembleSeries)
+        return(NULL)
 }
 
 #' Extract projections from ensemble member
@@ -262,14 +262,17 @@ processEnsemble <- function(ensemble, modelName, global, custom, type){
 
         # Read the ensemble data
         cat("Reading --->", ensemble[1], "\n")
+
         latlong <- readLatLong(ensemble = ensemble, global = global)
-        tas <- readtas(ensemble = ensemble, global = global)
+        climate_lats <- unique(latlong[ , 1])
+        climate_longs <- unique(latlong[ , 2])
+
         times <- readTimes(ensemble = ensemble, global = global)
+
         cat("Read operation complete", "\n")
 
         # Find indices of the closest points of measurement
         locations <- apply(global$cities, 1, closest_point, latlong = latlong)
-
         out_locations <- cbind(global$cities, latlong[locations, ])
         colnames(out_locations)[4:5] <- c("lat_grid", "long_grid")
 
@@ -287,19 +290,14 @@ processEnsemble <- function(ensemble, modelName, global, custom, type){
                            bounds = bounds)
 
         # Acquire time series for every city
-        series <- data.frame(tas[start:end, locations])
+        tas <- readtas(ensemble = ensemble, global = global, locations = locations)
+        series <- data.frame(tas[start:end, ])
 
-        # Convert the time series data to Fahrenheit
-        if(global$input_metric == "kelvin"){
-                series <- apply(series, 1:2, function(element) {
-                        return((element * 9/5) - 459.67)
-                })
-        } else if(global$input_metric == "celsius"){
-                series <- apply(series, 1:2, function(element) {
-                        return((element * 9/5) + 32)
-                })
+        # If the user wants to identify periods below, rather than above,
+        # a threshold, make all values in the series negative
+        if(global$above_threshold == FALSE){
+                series <- -1 * series
         }
-
 
         # Prepare return value
         ret <- list(locations = locations,

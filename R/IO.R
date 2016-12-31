@@ -26,8 +26,8 @@ process_cities_file <- function(cities, lat_lon_colnames){
 
         cities <- cities %>%
                 dplyr::select_(~ city,
-                              lat = ~ matches(lat_lon_colnames[1]),
-                              lon = ~ matches(lat_lon_colnames[2]))
+                              lat = ~ dplyr::matches(lat_lon_colnames[1]),
+                              lon = ~ dplyr::matches(lat_lon_colnames[2]))
 
         return(cities)
 }
@@ -61,15 +61,22 @@ readLatLong <- function(ensemble, global){
 #' the directory specified by the \code{dataFolder} argument of
 #' \code{\link{gen_hw_set}}.
 #'
+#' @param locations A numerical vector giving the column numbers that
+#'    correspond to the closest grid point location for each study
+#'    location in the temperature input data.
 #' @inheritParams readLatLong
 #' @inheritParams processModel
 #'
 #' @return A dataframe of climate projection data where each column
 #'    corresponds to a climate model grid point and each row corresponds
 #'    to a date of observation.
-readtas <- function(ensemble, global){
+readtas <- function(ensemble, global, locations){
         loc_file <- grep(global$tasFilenames, ensemble)
-        return(utils::read.csv(ensemble[loc_file], header = FALSE))
+        tas <- data.table::fread(ensemble[loc_file],
+                                 select = unique(locations),
+                                 header = FALSE)
+        tas <- tas[ , paste0("V", locations)]
+        return(tas)
 }
 
 #' Read projection dates data

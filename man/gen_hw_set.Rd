@@ -2,7 +2,7 @@
 % Please edit documentation in R/main.R
 \name{gen_hw_set}
 \alias{gen_hw_set}
-\title{Create and write heat wave projections}
+\title{Create and write extreme event projections}
 \usage{
 gen_hw_set(out, dataFolder, dataDirectories = list(historical = c(1980, 2004),
   rcp85 = c(2006, 2099)), citycsv, coordinateFilenames, tasFilenames,
@@ -11,11 +11,12 @@ gen_hw_set(out, dataFolder, dataDirectories = list(historical = c(1980, 2004),
   referenceBoundaries = c(2070, 2079), models_to_run = "all",
   probThreshold = 0.98, numDays = 2, printWarning = TRUE,
   threshold_ensemble = "r1i1p1", lat_lon_colnames = c("lat", "lon"),
-  input_metric = "kelvin")
+  above_threshold = TRUE, absolute_thresholds = c(299.82, 302.6, 305.37,
+  308.15), seasonal_months = c(5:9))
 }
 \arguments{
 \item{out}{Character string with pathway to directory to which
-heat wave files will be written. This should be a pathname to a directory
+extreme event files will be written. This should be a pathname to a directory
 on the user's local computer. If the directory already exists, it will
 be overwritten by this function, so the user should either specify a
 pathname for a directory that does not yet exist or be willing to
@@ -62,14 +63,14 @@ the package vignette for an example of the required structure for this
 file.}
 
 \item{IDheatwavesFunction}{A character string with the name of the R function
-to use to identify heat waves. This function may be a user-specified custom
+to use to identify extreme events. This function may be a user-specified custom
 function, but it must be loaded into the current R session. The
 function name must be put in quotation marks. For more guidance on how to
-write and use a custom function to identify heat waves, see the package
+write and use a custom function to identify extreme events, see the package
 vignette for \code{futureheatwaves}.}
 
 \item{thresholdBoundaries}{A numeric vector with the custom time boundaries
-to be used to determine the threshold temperatures for the heat wave
+to be used to determine the threshold variable values for the extreme event
 definition. The required format for this vector is c(start year, end
 year), with the restriction that bounds must be contained within the
 time boundaries of one of the two experiment subdirectories specified
@@ -77,14 +78,14 @@ by the \code{dataDirectories} argument in \code{\link{gen_hw_set}}.
 The default value is 1990 to 1999.}
 
 \item{projectionBoundaries}{A numeric vector with the custom time boundaries
-for which the user wants to create heat wave projections. The required
+for which the user wants to create extreme event projections. The required
 format for this vector is c(start year, end year), with the restriction
 that bounds must be contained within the time boundaries of one of the two
 experiment subdirectories specified by the \code{dataDirectories} argument
 in \code{\link{gen_hw_set}}. The default value is 2070 to 2079.}
 
 \item{referenceBoundaries}{A numeric vector with the custom time boundaries
-to use in calculating relative characteristics for heat waves (i.e., to use
+to use in calculating relative characteristics for extreme events (i.e., to use
 when exploring the role of adaptation in projections). For more
 information on how reference temperatures are used, see the package
 vignette for \code{futureheatwaves}. The required format for this vector
@@ -93,7 +94,7 @@ contained within the time boundaries of one of the two experiment
 subdirectories specified by the \code{dataDirectories} argument in
 \code{\link{gen_hw_set}}. The default value is 2070 to 2079. If the
 time bounds used differ from those used for projections, these reference
-temperatures will be pulled from the ensemble member for each climate
+variables will be pulled from the ensemble member for each climate
 model specified by \code{threshold_ensemble}.}
 
 \item{models_to_run}{A character vector with either "all" (the default),
@@ -103,12 +104,12 @@ model's subdirectory within the data directory (e.g.,
 \code{c("bcc1", "ccsm")}).}
 
 \item{probThreshold}{Numerical value between 0 and 1 specifying the
-percentile to be used for the threshold temperature used to define heat
-waves. The default value is 0.98 (i.e., a heat wave is a certain number of
+percentile to be used for the threshold variable used to define extreme
+events. The default value is 0.98 (i.e., a heat wave is a certain number of
 days above the city's 98th percentile temperature).}
 
 \item{numDays}{Integer greater than 0 giving the number of days to
-use in the heat wave definition (e.g., \code{numDays = 2} would define a
+use in the extreme event definition (e.g., \code{numDays = 2} would define a
 heat wave as two or more days above the threshold temperature).}
 
 \item{printWarning}{TRUE / FALSE, specifies whether to print out a warning
@@ -120,8 +121,8 @@ for this argument, for example if running this function within a loop.}
 \item{threshold_ensemble}{A character vector giving the name of the ensemble
 member that should be used when determining the city-specific threshold
 temperatures  for each climate model (e.g., \code{"r1i1p1"}). This
-threshold is used for relative heat wave definitions. See the
-\code{futureheatwaves} vignette for more on heat wave definitions.
+threshold is used for relative extreme event definitions. See the
+\code{futureheatwaves} vignette for more on extreme event definitions.
 If any climate model lacks that ensemble member for the specified
 dates for calculating the threshold, it will be excluded from the
 processing.}
@@ -130,13 +131,29 @@ processing.}
 in the \code{citycsv} dataframe for latitude (first vector element) and
 longitude (second vector element)}
 
-\item{input_metric}{A character string indicating the temperature metric
-of the climate projection data being processed. Choices are "kelvin",
-"fahrenheit", and "celsius".}
+\item{above_threshold}{A logical value specifying whether events should be
+identified by finding days above a threshold (\code{TRUE}, the default, e.g.,
+for finding heat waves or extreme air pollution events) or below a
+threshold (\code{FALSE}, e.g., for finding cold waves or droughts).}
+
+\item{absolute_thresholds}{A numeric vector with four values giving the
+absolute thresholds to use when calculating the "days.above.abs.thershold"
+columns in the heatwave characteristic output files. These values must be
+given in the units in which temperature is expressed in the input data
+(typically Kelvin for climate model output data). The default values are the
+values in Kelvin corresponding to 80, 85, 90, and 95 degrees Fahrenheit. If
+this parameter is customized, it must include four values.}
+
+\item{seasonal_months}{A numeric vector giving the months to use to
+calculate the "mean.seasonal.var" column in the extreme event characteristics
+output file. For example, if \code{seasonal_months} is set to \code{6:8},
+daily temperatures from June through August each day during the reference
+years would be used to calculate this mean seasonal value. The default
+is \code{5:9} (May--September).}
 }
 \value{
 This function creates, and writes to the user's computer, files with
-   the heat waves and their characteristics for the specified climate
+   the extreme events and their characteristics for the specified climate
    projections and dates. For more information on customizing this function,
    see the \code{futureheatwaves} vignette. This function also returns a
    dataframe listing the name of each climate model processed, as well as the
@@ -146,11 +163,13 @@ This function creates, and writes to the user's computer, files with
    argument.
 }
 \description{
-This function creates datasets of identified and characterized heat waves
+This function creates datasets of identified and characterized extreme events
 for all ensemble members in all climate models in a directory of climate
-projections for a user-specified set of locations.The resulting heat wave
+projections for a user-specified set of locations.The resulting extreme event
 projections are written out to a specified directory on the user's local
-computer.
+computer. For more details on downloading CMIP5 climate model output
+data and setting it up to use with this function, see this package's
+"starting_from_netcdf" vignette.
 }
 \examples{
 \dontrun{
